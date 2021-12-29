@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAALlAAAC5QEb/l57AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAC1QTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwDqzoAAAAA50Uk5TAAQICUJ3q7O4ubq7vPUqCjiJAAAA20lEQVRIx+3MqxXCQBSE4ZtAAVHoGAQOD4IGYuiABiiBEhAUgqEEPCoaCRwObA1sNptlH3NvbERG/WLORzRuqJtueg5V3QPcvzJRKVXLgFIioQGRaACRMIBAtIBAWIAlOoAlHMAQf4AhPAASPgAJCzz2DNEBuxlDdECRYcIBRJhwABEkPAATHgCJAEBEAAAiAlIiAhIiAWIiASICACEBgICAgE9AwCcOEHDEk9YQcMSVJjcIWOKzJFpBwBIXHfkZAoZ4l00sIGCIk4n8CAFNvMo25gU+ZFsaN6T9AFaLhCQ1Ii2DAAAAAElFTkSuQmCC">
+  <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:regular,bold,italic">
+  <title>Nur Assistant</title>
+  <style type="text/css">
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  body {
+    font-family: 'Ubuntu', sans-serif;
+  }
+  body, html, #app {
+    height: 100%;
+  }
+
+  #connection-indicator {
+    background-color: red;
+    height: 30px;
+    transition: background-color 0.5s;
+  }
+  #connection-indicator.connected {
+    background-color: lightgreen;
+  }
+
+  #app{
+    /*background-color: rgba(255, 0, 0, 0.3);*/
+    background-color: white;
+    height: 100%;
+    font-size: 24px;
+    overflow-y: scroll;
+    /*font-family: 'Roboto', sans-serif;*/
+  }
+  .italic {
+    font-style: italic;
+  }
+  .bold {
+    font-weight: bold;
+  }
+
+  /* EXPANDABLE SECTION */
+  label.expander-label {
+    display: block;
+    background-color: #f8f8af;;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    position: relative;
+    text-align: center;
+  }
+  label.expander-label:hover {
+    background-color: lightyellow;
+  }
+  label.expander-label.fulfilled {
+    background-color: lightgreen;
+  }
+  label.expander-label::after {
+    content: '';
+    display: block;
+    background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAALlAAAC5QEb/l57AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAC1QTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwDqzoAAAAA50Uk5TAAQICUJ3q7O4ubq7vPUqCjiJAAAA20lEQVRIx+3MqxXCQBSE4ZtAAVHoGAQOD4IGYuiABiiBEhAUgqEEPCoaCRwObA1sNptlH3NvbERG/WLORzRuqJtueg5V3QPcvzJRKVXLgFIioQGRaACRMIBAtIBAWIAlOoAlHMAQf4AhPAASPgAJCzz2DNEBuxlDdECRYcIBRJhwABEkPAATHgCJAEBEAAAiAlIiAhIiAWIiASICACEBgICAgE9AwCcOEHDEk9YQcMSVJjcIWOKzJFpBwBIXHfkZAoZ4l00sIGCIk4n8CAFNvMo25gU+ZFsaN6T9AFaLhCQ1Ii2DAAAAAElFTkSuQmCC') center no-repeat;
+    background-size: cover;
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%) rotate(180deg);
+  }
+  label.expander-label > span.progress {
+    display: none;
+    position: absolute;
+    height: 100%;
+    background-color: #90ee90bf;
+    top: 0px;
+    left: 0px;
+    border-radius: 5px 0px 0px 5px;
+    border-right: 1px solid black;
+  }
+  label.expander-label.fulfilled > span.progress {
+    border-right: none;
+    border-top-right-radius: 5px;
+  }
+  input.expander-checkbox + label.expander-label.fulfilled > span.progress {
+    border-bottom-right-radius: 5px;
+  }
+  label.expander-label > span.info-text {
+    position: relative;
+    z-index: 2;
+  }
+  input.expander-checkbox:checked + label.expander-label::after {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  input.expander-checkbox:checked + label.expander-label {
+    border-bottom-right-radius: 0px;
+    border-bottom-left-radius: 0px;
+  }
+  input.expander-checkbox:checked + label.expander-label > span.progress {
+    border-bottom-left-radius: 0px;
+  }
+  input.expander-checkbox {
+    display: none;
+  }
+  div.expandable-content {
+    display: none;
+    padding: 10px 5px 5px 5px;
+    background-color: white;
+    border: 1px solid black;
+    border-top: none;
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+  }
+  input.expander-checkbox:checked ~ div.expandable-content {
+    display: block;
+  }
+
+
+  /* OKUMA SECTION TEMPLATE */
+  div#okuma-container {
+  }
+  section.okuma-section {
+    padding: 5px;
+    margin: 5px;
+    border: 1px solid black;
+    border-radius: 5px;
+    background-color: #4cb2ad;
+  }
+  ul.okuma-history {
+    border: 1px solid black;
+    background-color: white;
+    font-size: 0.6em;
+    list-style: none;
+    padding: 5px;
+  }
+  ul.okuma-history > li:nth-child(2n+1) {
+    /*background-color: rgba(0, 255, 255, 0.1);*/
+    /*background-color: white;*/
+    background-color: lightgray;
+  }
+  ul.okuma-history > li:nth-child(2n+2) {
+    background-color: gray;
+    color: white;
+  }
+  button.get-okuma {
+    padding: 5px;
+    font-size: 1.2rem;
+  }
+  button.get-okuma > * {
+    pointer-events: none;
+  }
+  details.history-container {
+    margin-top: 10px;
+  }
+  details.history-container > summary {
+    font-size: 0.9rem;
+  }
+  ol.get-okuma {
+    font-size: 0.8em;
+    list-style-position: inside;
+    /*max-height: 300px;
+    overflow-y: scroll;*/
+  }
+  ol.get-okuma > li {
+    border: 1px solid black;
+    border-bottom: none;
+    padding:  5px;
+    background-color: #ffeebc;
+    position: relative;
+  }
+  ol.get-okuma > li:last-child {
+    border-bottom: 1px solid black;
+  }
+  ol.get-okuma > li:first-child {
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+  }
+  ol.get-okuma > li:last-child {
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+  }
+  ol.get-okuma > li:hover {
+    background-color: lightyellow;
+  }
+  ol.get-okuma > li[data-read="1"] {
+    background-color: lightgreen;
+  }
+  ol.get-okuma > li[data-read="1"]::after {
+    display: none;
+  }
+  ol.get-okuma > li[data-read="1"]::after {
+    display: block;
+    content: '✔ [' attr(data-user) ']';
+    font-size: 0.6em;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    right: 5px;
+  }
+  div.statusbar {
+    margin-bottom: 10px;
+    border: 1px dashed black;
+    background-color: yellow;
+  }
+  div.statusbar.error {
+    background-color: lightpink;
+  }
+  div.statusbar.connected {
+    background-color: lightgreen;
+  }
+  div#username {
+    display: inline-block;
+    text-align: right;
+    border: 1px solid black;
+    margin: 3px;
+    font-size: 0.9em;
+  }
+
+  </style>
+</head>
+<body>
+  <div id="app">
+    <style>
+    </style>
+
+    <div>
+      <div class="statusbar">
+        <div id="username"></div>
+      </div>
+      <template id="okuma-section">
+        <section class="okuma-section">
+          <input class="expander-checkbox" type="checkbox">
+          <label class="expander-label">
+            <span class="progress"></span>
+            <span class="info-text">
+              Yasin (5/41)
+            </span>
+          </label>
+          <div class="expandable-content">
+            <div>
+              <button class="get-okuma">Yasin al</button>
+            </div>
+            <details class="history-container">
+              <summary>Geçmişler</summary>
+              <ul class="okuma-history">
+              </ul>
+            </details>
+          </div>
+        </section>
+      </template>
+
+      <div id="okuma-container"></div>
+      <script src="./static/js/socket.io-4.3.2.min.js" integrity="sha512-N5JbZMETkl+0SZh5l8OA2VxSfF120owfQyy54iAXTJIKuqAn3A9TrNz1ypB55o8aSU5MxaodEgv74wGUvgUynQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script>
+        const template = document.querySelector('template#okuma-section');
+        const container = document.querySelector('div#okuma-container');
+
+
+        function getUsername(untilValid = true, promptText = 'Adinizi girin:', promptTextAfterError = `Adinizi girmeniz lazim! Tekrar girin:`, defaultValue) {
+          while (true) {
+            const username = prompt(promptText, defaultValue).trim();
+            if (username) {
+              return username;
+            } else if (!untilValid) {
+              return undefined;
+            }
+            promptText = promptTextAfterError;
+          }
+        }
+        let userId = localStorage.getItem('test-okuma-user-id');
+        let user;
+        function setUser(u, {save = true} = {}) {
+          user = u;
+          userElement.innerHTML = `[ <span class="bold">${user.name || '*name is not set*'}</span> ]`;
+          if (save) {
+            localStorage.setItem('test-okuma-user-id', user.id);
+          }
+        }
+        // if (!user) {
+        //   user = getUsername(true);
+        //   localStorage.setItem('test-okuma-user', user);
+        // }
+        const statusbar = document.querySelector('div.statusbar');
+        const userElement = document.getElementById('username');
+        userElement.addEventListener('click', e => {
+          let newUserName = getUsername(false, 'Yeni adinizi girin:', undefined, user.name);
+          if (newUserName === null) {
+            return
+          }
+          if (!newUserName) {
+            alert('Adinizi girmeniz lazim! Iptal!');
+            return;
+          }
+          console.warn('todo: user changed name!');
+
+          // todo: send new name to server
+          setUser({...user, name: newUserName});
+
+          // user = newUser;
+          // localStorage.setItem('test-okuma-user', user);
+          // userElement.innerHTML = `[ <span class="bold">${user}</span> ]`;
+        });
+
+        const socket = io('ws://', {
+          // transports: ['websocket'],
+        });
+
+        socket.io.on("ping", () => {  // ...
+          console.log(`[socket.io ping]`);
+        });
+        socket.on('connect', () => {
+          console.log(`[socket.io connect]: ${socket.id}`);
+          statusbar.classList.add('connected');
+          statusbar.title = `connection id: ${socket.id}`;
+
+          // connect user
+          if (!userId) {
+            // register new user
+            socket.emit('create-user', {name: ""}, u => {
+              setUser(u);
+            })
+          } else {
+            socket.emit('get-user', {id: userId, /* username, password */}, u => {
+              setUser(u, {save: false});
+            });
+          }
+
+          // get okumalar
+          socket.emit('get-okumalar-list', (okumalar) => {
+            applyData(okumalar);
+          });
+        });
+        socket.on('got-okuma', (item, historyItem) => {
+          console.log('[got-okuma]', item, historyItem);
+          okumaSubitemHandlers[item.id](item, historyItem);
+        })
+        socket.on('disconnect', (reason) => {
+          console.log(`[socket.io disconnect]: ${reason}`);
+          statusbar.classList.remove('connected');
+          statusbar.classList.remove('error');
+        });
+        socket.on('error', (e) => {
+          console.warn(`[socket.io error]: ${e}`);
+          statusbar.classList.add('error');
+        });
+        socket.on('message', (...args) => {
+          console.log(`[socket.io (message)]: ${args}`);
+        });
+
+
+        let okumaSubitemHandlers = {};
+
+        const UNKNOWN_USER = '*unknown*';
+
+        function applyData(okumalar) {
+
+          okumaSubitemHandlers = {};
+          while (container.firstChild) {
+            container.removeChild(container.lastChild);
+          }
+
+          okumalar.items.forEach(({id: sectionId, name, items, history = []}) => {
+            const getSubitem = id => {
+              for (let si of items) {
+                if (si.id === id) {
+                  return si;
+                }
+              }
+            };
+            const okumaSection = template.content.cloneNode(true);
+
+            const label = okumaSection.querySelector('label.expander-label');
+            const labelProgress = label.querySelector('span.progress');
+            const labelInfoText = label.querySelector('span.info-text');
+            const expandCheckbox = okumaSection.querySelector('input.expander-checkbox');
+            label.addEventListener('click', () => {
+              expandCheckbox.checked = !expandCheckbox.checked;
+              localStorage.setItem(`okuma-section-${sectionId}-expanded`, expandCheckbox.checked ? 1 : '');
+            });
+            if (localStorage.getItem(`okuma-section-${sectionId}-expanded`, false)) {
+              label.click();
+            }
+
+            const totalCount = items.reduce((a, i) => a + i.count, 0);
+            // todo:
+            const recommendedPortion = (items.length === 1 ? items[0].recommendedPortion : 1) || 1;
+            let currentCount = 0;
+            function setCurrentCount(n) {
+              if (n === undefined) {
+                n = items.reduce((a, i) => a + (i.currentCount || 0), 0);
+              }
+              currentCount = n;
+              if (currentCount > 0) {
+                labelProgress.style.display = 'inline';
+                labelProgress.style.width = `${currentCount/totalCount*100}%`;
+              }
+              // label.style.backgroundImage = `linear-gradient(to right, ${Array(currentCount).fill('#75e975').join(',')}, ${Array(totalCount-currentCount).fill('rgb(249, 220, 100)').join(',')})`;
+              labelInfoText.innerText = `${name} (${currentCount}/${totalCount})`;
+              if (currentCount >= totalCount) {
+                label.classList.add('fulfilled');
+              }
+            }
+            setCurrentCount();
+
+            const historyList = okumaSection.querySelector('ul.okuma-history');
+            const historyContainer = okumaSection.querySelector('details.history-container');
+            function addToHistory(name, count, user) {
+              console.log(`:debug:addToHistory(${name}, ${count}, ${JSON.stringify(user)})`);
+              const historyItem = document.createElement('li');
+              historyItem.innerHTML = `[${new Date().toLocaleString()}] <span class="bold">${user.name || UNKNOWN_USER }</span> ${count ? count + ' ' : ''}${name} aldi`;
+              historyList.appendChild(historyItem);
+              historyContainer.open = true;
+            }
+            for (let {itemId, count, user} of history) {
+              addToHistory(getSubitem(itemId).name, count === 1 ? undefined : count, user);
+            }
+            // close history when page is loaded first time
+            historyContainer.open = false;
+
+            const getOkumaButton = okumaSection.querySelector('button.get-okuma');
+
+            function addGotSubitemOkumaHandler(itemId, callback) {
+              okumaSubitemHandlers[itemId] = (item, historyItem) => {
+                addToHistory(item.name, item.count > 1 ? historyItem.count : undefined, historyItem.user);
+                for (let i in items) {
+                  if (items[i].id === item.id) {
+                    items[i] = item;
+                    break;
+                  }
+                }
+                setCurrentCount();
+                if (callback) {
+                  callback(item, historyItem);
+                }
+              };
+            }
+
+            if (items.length === 1) {
+              // one item
+
+              addGotSubitemOkumaHandler(items[0].id);
+
+              getOkumaButton.innerText = `${name} al`;
+
+              function addOkuma(e) {
+                let count = parseInt(e.target.dataset.count);
+                if (!count) {
+                  const v = prompt(`Kac ${name} almak istersiniz?`, recommendedPortion);
+                  if (v === null) {
+                    console.log('user calcelled');
+                    return;
+                  }
+                  count = parseInt(v);
+                  if (isNaN(count)) {
+                    alert(`${v} anlasilmadi!`);
+                    return;
+                  }
+                } else if (!confirm(`${count} tane ${name} alinsin mi?`)) {
+                  console.log('user cancelled');
+                  return;
+                }
+
+                const getNCountOkumaButton = getOkumaButton.parentElement.querySelector(`button[data-count="${count}"]`);
+                if (!getNCountOkumaButton) {
+                  const newGetOkumaButton = getOkumaButton.cloneNode(true);
+                  newGetOkumaButton.dataset.count = count;
+                  newGetOkumaButton.innerHTML = `${name} al (<span class="bold">${count}</span>)`;
+                  // newGetOkumaButton.addEventListener('click', addOkuma);
+                  newGetOkumaButton.onclick = addOkuma;
+                  getOkumaButton.parentNode.lastElementChild.after(newGetOkumaButton);
+                }
+
+                socket.emit('get-okuma', {userId: user.id, count, id: items[0].id}, function (e) {
+                  console.log('get-okuma callback');
+                  // addToHistory(name, count, user);
+                  // addToCurrentCount(count);
+                });
+              }
+
+              // getOkumaButton.addEventListener('click', addOkuma);
+              getOkumaButton.onclick = addOkuma;
+            } else {
+              // list
+              const getOkumaList = document.createElement('ol');
+              getOkumaList.classList.add('get-okuma');
+              const listItems = items.map(({id, name, count, currentCount}, index) => {
+                const li = document.createElement('li');
+                li.tabIndex = index;
+                li.dataset.itemIndex = index;
+                li.innerText = `${name}`;
+                getOkumaList.appendChild(li);
+                if (currentCount >= count) {
+                  li.dataset.user = (history && history.filter(({itemId}) => itemId === id)[0].user.name) || UNKNOWN_USER;
+                  li.dataset.read = 1;
+                }
+                addGotSubitemOkumaHandler(id, (_, historyItem) => {
+                  li.dataset.user = historyItem.user.name || UNKNOWN_USER;
+                  li.dataset.read = 1;
+                });
+                return li;
+              });
+              const r = getOkumaButton.parentElement.replaceChild(getOkumaList, getOkumaButton);
+              getOkumaList.addEventListener('click', function (e) {
+                const li = e.target.closest('li');
+                if (li === null) {
+                  // click to list
+                  return;
+                }
+                // todo
+                const {name: itemName, id: itemId} = items[+li.dataset.itemIndex];
+                if (li.dataset.read) {
+                  return;
+                }
+                if (!confirm(`(${name} -> ${itemName}) okumak mi istersiniz?`)) {
+                  console.log('user cancelled!');
+                  return;
+                }
+
+                socket.emit('get-okuma', {userId: user.id, count: 1, id: itemId}, function (e) {
+                  console.log('get-okuma callback');
+                  // li.dataset.user = user;
+                  // li.dataset.read = 1;
+                  // addToCurrentCount(1);
+                  // addToHistory(itemName, undefined, user);
+                })
+
+              });
+            }
+
+            container.appendChild(okumaSection);
+          });
+        }
+      </script>
+    </div>
+  </div>
+</body>
+</html>

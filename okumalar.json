@@ -1,0 +1,70 @@
+{
+    "items": [
+        {
+            "id": 4,
+            "name": "Hizb-ul-Hakaik",
+            "subitems": [
+                {"id": 4, "name": "Yasin", "count": 1},
+                {"id": 5, "name": "Feth", "count": 1},
+                {"id": 6, "name": "Rahman-Hatmdua", "count": 1},
+                {"id": 7, "name": "Cevsen-33", "count": 1},
+                {"id": 8, "name": "Cevsen-66", "count": 1},
+                {"id": 9, "name": "Cevsen-100", "count": 1},
+                {"id": 10, "name": "Evrad-i Kudsiye#1", "count": 1},
+                {"id": 11, "name": "Evrad-i Kudsiye#1", "count": 1},
+                {"id": 12, "name": "Delail-in-nur", "count": 1},
+                {"id": 13, "name": "Sekine ve dualar", "count": 1},
+                {"id": 14, "name": "Munacat-i Kuran#1", "count": 1},
+                {"id": 15, "name": "Munacat-i Kuran#2", "count": 1},
+                {"id": 16, "name": "Tahmidiye", "count": 1},
+                {"id": 17, "name": "Hulasat-ul-Hulasa", "count": 1},
+                {"id": 18, "name": "Son dua ve istigfarlar", "count": 1}
+            ]
+        },
+        {
+            "id": 1,
+            "name": "Yasin",
+            "subitems": [
+                {
+                    "id": 1,
+                    "name": "Yasin",
+                    "count": 41
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "name": "Feth",
+            "subitems": [
+                {
+                    "id": 2,
+                    "name": "Feth",
+                    "count": 41
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Tahmidiye",
+            "subitems": [
+                {
+                    "id": 3,
+                    "name": "Tahmidiye",
+                    "count": 19
+                }
+            ]
+        },
+        {
+            "id": "5",
+            "name": "Salat-un-Nariya",
+            "subitems": [
+                {
+                    "id": 19,
+                    "name": "Salat-an-Nariya",
+                    "count": 4444,
+                    "recommendedPortion": 20
+                }
+            ]
+        }
+    ]
+}
