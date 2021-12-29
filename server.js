@@ -86,27 +86,74 @@ io.on('connection', socket => {
       db.serialize(() => {
         db.all(`
           select o.id as oid, o.name as oname,
-                 i.id as iid, i.name as iname,
-                 i.count as icount, i.recommended_portion as irp
+                 oi.id as iid, oi.name as iname,
+                 oi.count as icount, oi.recommended_portion as irp,
+                 ob.id as obid, cast(strftime('%s', ob.start_ts) as int) as obsts,
+                    cast(strftime('%s', ob.end_ts) as int) as obets,
+                 obi.id as obiid, obi.user_id, obi.count as obcount,
+                    cast(strftime('%s', obi.ts) as int) as ts,
+                 obiu.name as user_name
             from okumalar as o
-            inner join okuma_items as i
-              on o.id = i.okuma_id
+            inner join okuma_items as oi
+              on o.id = oi.okuma_id
+            left join okuma_batches as ob
+              on o.id = ob.okuma_id and ob.end_ts is null
+            left join okuma_batch_items as obi
+              on ob.id = obi.okuma_batch_id
+                and oi.id = obi.okuma_item_id
+            left join users as obiu
+              on obi.user_id = obiu.id
+            order by o.id, oi.id, obi.ts desc
                `, [], function (e, rows) {
-          const okumalar = {}
+          if (e) throw e;
+          const okumalar = {}, items = {};
+          const okumalarWithoutBatches = [];
           rows.forEach(r => {
+            // console.log(r);
+            let okuma = okumalar[r.oid];
             if (!okumalar[r.oid]) {
-              okumalar[r.oid] = {
+              okuma = okumalar[r.oid] = {
                 id: r.oid,
                 name: r.oname,
                 items: [],
+                history: [],
               };
+              if (!r.obid) {
+                okumalarWithoutBatches.push(r.oid);
+              } else {
+                const batch = okuma.batch = {
+                  id: r.obid,
+                  startTs: r.obsts,
+                };
+              }
             }
-            okumalar[r.oid].items.push({
-              id: r.iid,
-              name: r.iname,
-              count: r.icount,
-              recommendedPortion: r.irp,
-            });
+            let item = items[r.iid];
+            if (!item) {
+              item = items[r.iid] = {
+                id: r.iid,
+                name: r.iname,
+                count: r.icount,
+                recommendedPortion: r.irp,
+                currentCount: 0,
+                history: [],
+              };
+              okumalar[r.oid].items.push(item);
+            }
+            if (r.obiid) {
+              const historyItem = {
+                id: r.obiid,
+                user: {
+                  id: r.user_id,
+                  name: r.user_name,
+                },
+                count: r.obcount,
+                ts: r.ts,
+                itemId: item.id,
+              };
+              okuma.history.push(historyItem);
+              // item.history.push(historyItem);
+              item.currentCount += historyItem.count;
+            }
           });
           callback({items: Object.values(okumalar)});
         })

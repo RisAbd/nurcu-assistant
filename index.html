@@ -365,13 +365,7 @@
           }
 
           okumalar.items.forEach(({id: sectionId, name, items, history = []}) => {
-            const getSubitem = id => {
-              for (let si of items) {
-                if (si.id === id) {
-                  return si;
-                }
-              }
-            };
+            const itemsById = items.reduce((s, a) => {s[a.id] = a; return s;}, {});
             const okumaSection = template.content.cloneNode(true);
 
             const label = okumaSection.querySelector('label.expander-label');
@@ -409,15 +403,16 @@
 
             const historyList = okumaSection.querySelector('ul.okuma-history');
             const historyContainer = okumaSection.querySelector('details.history-container');
-            function addToHistory(name, count, user) {
+            function addToHistory(name, count, user, ts) {
               console.log(`:debug:addToHistory(${name}, ${count}, ${JSON.stringify(user)})`);
               const historyItem = document.createElement('li');
-              historyItem.innerHTML = `[${new Date().toLocaleString()}] <span class="bold">${user.name || UNKNOWN_USER }</span> ${count ? count + ' ' : ''}${name} aldi`;
+              historyItem.innerHTML = `[${(ts || new Date()).toLocaleString()}] <span class="bold">${user.name || UNKNOWN_USER }</span> ${count ? count + ' ' : ''}${name} aldi`;
               historyList.appendChild(historyItem);
               historyContainer.open = true;
             }
-            for (let {itemId, count, user} of history) {
-              addToHistory(getSubitem(itemId).name, count === 1 ? undefined : count, user);
+            for (let {itemId, count, user, ts} of history) {
+              const item = itemsById[itemId];
+              addToHistory(item.name, item.totalCount === 1 ? undefined : count, user, new Date(ts * 1000));
             }
             // close history when page is loaded first time
             historyContainer.open = false;
