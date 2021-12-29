@@ -1,0 +1,6 @@
+CREATE TABLE users(id integer primary key, is_active boolean default true, name text not null);
+CREATE TABLE okumalar (id integer primary key, is_active boolean default true, name text not null);
+CREATE TABLE temp_okuma_items (id integer primary key, okuma_id integer not null, name text not null, count integer not null default 1, foreign key (okuma_id) references okumalar(id));
+CREATE TABLE okuma_items (id integer primary key, okuma_id integer not null, name text not null, count integer not null default 1, recommended_portion integer null, foreign key (okuma_id) references okumalar(id));
+CREATE TABLE okuma_batches (id integer primary key, okuma_id integer not null, start_ts timestamp not null default CURRENT_TIMESTAMP, end_ts timestamp null, foreign key (okuma_id) references okumalar(id));
+CREATE TABLE okuma_batch_items (id integer primary key, okuma_batch_id integer not null, okuma_item_id integer not null, user_id integer not null, count integer not null, ts timestamp default CURRENT_TIMESTAMP, check_ts timestamp null, foreign key (okuma_batch_id) references okuma_batches(id), foreign key (okuma_item_id) references okuma_items(id), foreign key (user_id) references users(id));
