@@ -14,7 +14,7 @@ const io = new socketio.Server(server, { /* options */ });
 
 const port = process.env.PORT || 3000;// server listening for client connection
 
-function db_connect(callback) {
+function dbConnect(callback) {
   const db = new sqlite3.Database('./db.sqlite3');
   db.get('PRAGMA foreign_keys = ON');
   if (!callback) {
@@ -42,7 +42,7 @@ io.on('connection', socket => {
 
   socket.on('create-user', ({name}, callback) => {
     console.debug(`[create-user] ${name}`);
-    db_connect(db => {;
+    dbConnect(db => {;
       db.run(`INSERT INTO users(name) VALUES (?)`, [name], function (e) {
         if (e) throw e;
         db.get(`SELECT id, is_active, name FROM users WHERE id = ?`, [this.lastID], (e, row) => {
@@ -56,18 +56,33 @@ io.on('connection', socket => {
 
   socket.on('get-user', ({id}, callback) => {
     console.debug(`[get-user] ${id}`);
-    db_connect(db => {
+    dbConnect(db => {
       db.get(`SELECT id, is_active, name FROM users WHERE id = ?`, [id], (e, row) => {
         if (e) throw e;
         console.debug(`[get-user]:callback(${JSON.stringify(row)})`);
         callback(row);
       });
     });
-  })
+  });
+
+  socket.on('set-user-name', ({id: userId, name}, callback) => {
+    console.debug(`[set-user-name] ${userId}, ${name}`);
+    dbConnect(db => {
+      db.serialize(() => {
+        db.run(`UPDATE users SET name = ? WHERE id = ?`, [name, userId])
+        db.get(`SELECT id, is_active, name FROM users WHERE id = ?`, [userId], function (e, user) {
+          if (e) throw e;
+          console.debug(`[set-user-name]:callback(${JSON.stringify(user)}`);
+          callback(user);
+        })
+      })
+    })
+  });
+
 
   socket.on('get-okumalar-list', callback => {
     console.debug('[get-okumalar-list]', callback);
-    db_connect(db => {
+    dbConnect(db => {
       db.serialize(() => {
         db.all(`
           select o.id as oid, o.name as oname,
@@ -102,7 +117,7 @@ io.on('connection', socket => {
 
   socket.on('get-okuma', ({userId, count, id: subitemId}, callback) => {
     console.debug(`[get-okuma](${userId}, ${count}, ${subitemId})`)
-    db_connect(db => {
+    dbConnect(db => {
       db.get(`SELECT id, is_active, name FROM users WHERE id = ?`, [userId], (e, user) => {
         if (e) throw e;
         for (let item of okumalar.items) {

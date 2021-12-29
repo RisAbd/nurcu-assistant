@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nur Assistant</title>
   <link rel="shortcut icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABABAMAAABYR2ztAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAALlAAAC5QEb/l57AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAC1QTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwDqzoAAAAA50Uk5TAAQICUJ3q7O4ubq7vPUqCjiJAAAA20lEQVRIx+3MqxXCQBSE4ZtAAVHoGAQOD4IGYuiABiiBEhAUgqEEPCoaCRwObA1sNptlH3NvbERG/WLORzRuqJtueg5V3QPcvzJRKVXLgFIioQGRaACRMIBAtIBAWIAlOoAlHMAQf4AhPAASPgAJCzz2DNEBuxlDdECRYcIBRJhwABEkPAATHgCJAEBEAAAiAlIiAhIiAWIiASICACEBgICAgE9AwCcOEHDEk9YQcMSVJjcIWOKzJFpBwBIXHfkZAoZ4l00sIGCIk4n8CAFNvMo25gU+ZFsaN6T9AFaLhCQ1Ii2DAAAAAElFTkSuQmCC">
   <link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Ubuntu:regular,bold,italic">
-  <title>Nur Assistant</title>
+
+  <script src="./static/js/lib/socket.io-4.3.2.min.js" integrity="sha512-N5JbZMETkl+0SZh5l8OA2VxSfF120owfQyy54iAXTJIKuqAn3A9TrNz1ypB55o8aSU5MxaodEgv74wGUvgUynQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style type="text/css">
   * {
     margin: 0;
@@ -253,7 +255,6 @@
       </template>
 
       <div id="okuma-container"></div>
-      <script src="./static/js/socket.io-4.3.2.min.js" integrity="sha512-N5JbZMETkl+0SZh5l8OA2VxSfF120owfQyy54iAXTJIKuqAn3A9TrNz1ypB55o8aSU5MxaodEgv74wGUvgUynQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
       <script>
         const template = document.querySelector('template#okuma-section');
         const container = document.querySelector('div#okuma-container');
@@ -294,10 +295,11 @@
             alert('Adinizi girmeniz lazim! Iptal!');
             return;
           }
-          console.warn('todo: user changed name!');
+          // console.warn('todo: user changed name!');
 
           // todo: send new name to server
-          setUser({...user, name: newUserName});
+          socket.emit('set-user-name', {id: user.id, name: newUserName}, setUser);
+          // setUser({...user, name: newUserName});
 
           // user = newUser;
           // localStorage.setItem('test-okuma-user', user);
