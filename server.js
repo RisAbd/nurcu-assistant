@@ -84,7 +84,7 @@ io.on('connection', socket => {
     console.debug('[get-okumalar-list]', callback);
     dbConnect(db => {
       db.all(`
-        select o.id as oid, o.name as oname,
+        select o.id as oid, o.name as oname, o.is_active, o.read_sequentially,
                oi.id as iid, oi.name as iname,
                oi.count as icount, oi.recommended_portion as irp,
                ob.id as obid, cast(strftime('%s', ob.start_ts) as int) as obsts,
@@ -103,6 +103,8 @@ io.on('connection', socket => {
           left join users as obiu
             on obi.user_id = obiu.id
 
+          where o.is_active
+
           order by o.id, oi.id, obi.ts
              `, [], function (e, rows) {
         if (e) throw e;
@@ -114,6 +116,8 @@ io.on('connection', socket => {
             okuma = okumalar[r.oid] = {
               id: r.oid,
               name: r.oname,
+              isActive: Boolean(r.is_active),
+              readSequentially: Boolean(r.read_sequentially),
               items: [],
               history: [],
             };
