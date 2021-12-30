@@ -224,15 +224,27 @@ io.on('connection', socket => {
                 history: [],
               }
               resolve([item, history]);
-              if (item.currentCount === totalCount) {
-                db.run(`UPDATE okuma_batches SET end_ts = ? WHERE id = ?`, [Date.now()/1000, okumaBatchId], (e, r) => {
-                  if (e) return reject(e);
-                  resolve(this.changes);
-                });
-              }
-              // io.emit('got-okuma', item, history);
-              // console.debug(`[got-okuma]:emit(${JSON.stringify(item)}, ${JSON.stringify(history)})`);
-              // callback(item, history);
+              db.run(`
+                UPDATE okuma_batches
+                    SET end_ts = CASE WHEN (SELECT sum(distinct oi.count) > sum(obi.count)
+                                              FROM okumalar o
+                                              INNER JOIN okuma_items oi
+                                                ON oi.okuma_id = o.id
+                                              INNER JOIN okuma_batches ob
+                                                ON ob.okuma_id = o.id AND ob.end_ts is null
+                                              LEFT JOIN okuma_batch_items AS obi
+                                                ON obi.okuma_batch_id = ob.id AND obi.okuma_item_id = oi.id
+                                              WHERE ob.id = ?)
+                                        THEN NULL
+                                      ELSE
+                                        DATETIME(?, 'unixepoch') -- CURRENT_TIMESTAMP
+                                  END
+                  WHERE id = ?`, [okumaBatchId, r.ts, okumaBatchId], (e, r) => {
+                if (e) return reject(e);
+                resolve(this.changes);
+              });
+
+              emitResponse([item, history]);
             });
           });
         });
@@ -244,24 +256,15 @@ io.on('connection', socket => {
           callback(item, history);
         };
 
-        const markAsRead = okumaBatchId => new Promise((resolve, reject) => {
-          db.run(`UPDATE okuma_batches SET end_ts = ? WHERE id = ?`, [Date.now()/1000, okumaBatchId], (e, r) => {
-            if (e) return reject(e);
-            resolve(this.changes);
-          })
-        });
-
         if (okumaBatchId) {
           const currentCount = rows.reduce((s, a) => s+a.obicount, 0);
           checkCurrentCount(currentCount);
-          createHistoryAndResponse(okumaBatchId, currentCount)
-            .then(emitResponse);
-
+          createHistoryAndResponse(okumaBatchId, currentCount);
         } else {
           db.run(`INSERT INTO okuma_batches(okuma_id) VALUES (?)`, [okumaId], function (e, r) {
             if (e) throw e;
-            createHistoryAndResponse(this.lastID, 0)
-              .then(emitResponse);
+            checkCurrentCount(0);
+            createHistoryAndResponse(this.lastID, 0);
           });
         }
       });

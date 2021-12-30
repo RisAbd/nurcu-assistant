@@ -396,7 +396,7 @@
               if (currentCount >= totalCount) {
                 label.classList.add('fulfilled');
                 setTimeout(() => {
-                  alert(`${name} okundu! Yenisi basladi!`);
+                  // alert(`${name} okundu! Yenisi basladi!`);
                   socket.emit('get-okumalar-list', applyData);
                 }, 1000);
               }
