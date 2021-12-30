@@ -331,9 +331,7 @@
           }
 
           // get okumalar
-          socket.emit('get-okumalar-list', (okumalar) => {
-            applyData(okumalar);
-          });
+          socket.emit('get-okumalar-list', applyData);
         });
         socket.on('got-okuma', (item, historyItem) => {
           console.log('[got-okuma]', item, historyItem);
@@ -397,6 +395,10 @@
               labelInfoText.innerText = `${name} (${currentCount}/${totalCount})`;
               if (currentCount >= totalCount) {
                 label.classList.add('fulfilled');
+                setTimeout(() => {
+                  alert(`${name} okundu! Yenisi basladi!`);
+                  socket.emit('get-okumalar-list', applyData);
+                }, 1000);
               }
             }
             setCurrentCount();
@@ -412,7 +414,7 @@
             }
             for (let {itemId, count, user, ts} of history) {
               const item = itemsById[itemId];
-              addToHistory(item.name, item.totalCount === 1 ? undefined : count, user, new Date(ts * 1000));
+              addToHistory(item.name, item.count > 1 ? count : undefined, user, new Date(ts * 1000));
             }
             // close history when page is loaded first time
             historyContainer.open = false;
@@ -470,7 +472,7 @@
                   getOkumaButton.parentNode.lastElementChild.after(newGetOkumaButton);
                 }
 
-                socket.emit('get-okuma', {userId: user.id, count, id: items[0].id}, function (e) {
+                socket.emit('get-okuma', {userId: user.id, count, itemId: items[0].id}, function (e) {
                   console.log('get-okuma callback');
                   // addToHistory(name, count, user);
                   // addToCurrentCount(count);
@@ -516,7 +518,7 @@
                   return;
                 }
 
-                socket.emit('get-okuma', {userId: user.id, count: 1, id: itemId}, function (e) {
+                socket.emit('get-okuma', {userId: user.id, count: 1, itemId}, function (e) {
                   console.log('get-okuma callback');
                   // li.dataset.user = user;
                   // li.dataset.read = 1;
